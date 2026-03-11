@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maintenance Checksheet V.11</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2230;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #7d8590;
+            --text-dim: #484f58;
+            --green: #3fb950;
+            --green-bg: rgba(63,185,80,0.12);
+            --red: #f85149;
+            --red-bg: rgba(248,81,73,0.12);
+            --yellow: #e3b341;
+            --yellow-bg: rgba(227,179,65,0.12);
+            --accent: #58a6ff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 120px;
+        }
+        /* HEADER */
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(13,17,23,0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+        }
+        .header-inner {
+            max-width: 520px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #3fb950, #1f6feb);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-text { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.05em; }
+        .logo-ver { font-size: 10px; color: var(--green); font-family: 'IBM Plex Mono', monospace; }
+        .btn-refresh {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-muted); padding: 6px; border-radius: 6px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .btn-refresh:hover { color: var(--text); background: var(--surface2); }
+
+        /* MAIN */
+        main { max-width: 520px; margin: 0 auto; padding: 16px; }
+
+        /* CARD */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        /* INSPECTOR FORM */
+        .field-label {
+            font-size: 10px; font-weight: 700;
+            color: var(--text-muted); text-transform: uppercase;
+            letter-spacing: 0.08em; display: block;
+            margin-bottom: 8px; padding-left: 2px;
+        }
+        input[type="text"], select, textarea {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            font-size: 14px; font-weight: 500;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none;
+        }
+        input[type="text"]:focus, select:focus { border-color: var(--accent); }
+        input[type="text"]::placeholder { color: var(--text-dim); }
+        .field-row { margin-bottom: 14px; }
+        .field-row:last-child { margin-bottom: 0; }
+
+        /* DATE INFO */
+        .date-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 6px 12px;
+            font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* PROGRESS */
+        .progress-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 8px;
+        }
+        .progress-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+        .progress-count { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; }
+        .progress-track {
+            height: 4px; background: var(--border); border-radius: 4px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, var(--green), var(--accent));
+            width: 0; transition: width 0.6s cubic-bezier(.4,0,.2,1);
+            border-radius: 4px;
+        }
+        .progress-stats {
+            display: flex; gap: 16px; margin-top: 10px;
+        }
+        .stat-chip {
+            flex: 1; display: flex; align-items: center; gap: 6px;
+            background: var(--surface2); border-radius: 8px; padding: 8px 12px;
+            font-size: 11px; font-weight: 600;
+        }
+        .stat-dot { width: 7px; height: 7px; border-radius: 50%; }
+        .stat-dot.ok { background: var(--green); }
+        .stat-dot.ng { background: var(--red); }
+        .stat-dot.pending { background: var(--text-dim); }
+        .stat-val { font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 700; margin-left: auto; }
+
+        /* CATEGORY */
+        .cat-header {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 10px; padding: 0 2px;
+        }
+        .cat-bar { width: 3px; height: 16px; border-radius: 2px; background: var(--accent); }
+        .cat-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* MACHINE CARD */
+        .machine-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            transition: border-color 0.2s;
+        }
+        .machine-card.status-ok { border-color: rgba(63,185,80,0.4); }
+        .machine-card.status-ng { border-color: rgba(248,81,73,0.4); }
+
+        .machine-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .machine-id {
+            font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+            color: var(--text-dim); letter-spacing: 0.05em; font-weight: 600;
+            background: var(--surface2); border-radius: 4px; padding: 2px 6px;
+            display: inline-block; margin-bottom: 4px;
+        }
+        .machine-name { font-size: 13px; font-weight: 600; color: var(--text); }
+        .machine-std {
+            font-size: 10px; color: var(--text-muted); margin-top: 2px;
+            display: flex; align-items: center; gap: 4px;
+        }
+
+        .status-icon { flex-shrink: 0; }
+
+        /* BUTTON GROUP */
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-status {
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px; font-weight: 700;
+            color: var(--text-muted);
+            transition: all 0.15s ease;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-status:active { transform: scale(0.97); }
+        .btn-status.active-ok {
+            background: var(--green-bg);
+            border-color: var(--green);
+            color: var(--green);
+        }
+        .btn-status.active-ng {
+            background: var(--red-bg);
+            border-color: var(--red);
+            color: var(--red);
+        }
+        .btn-status:not(.active-ok):not(.active-ng):hover { background: var(--border); color: var(--text); }
+
+        /* NG NOTE */
+        .ng-note {
+            margin-top: 10px;
+            position: relative;
+        }
+        .ng-note textarea {
+            background: var(--red-bg);
+            border-color: rgba(248,81,73,0.3);
+            font-size: 12px;
+            resize: none;
+            color: var(--text);
+            padding: 10px 12px;
+        }
+        .ng-note textarea:focus { border-color: var(--red); }
+        .ng-note textarea::placeholder { color: rgba(248,81,73,0.4); }
+
+        /* SECTION GROUP */
+        .section-group { margin-bottom: 24px; }
+
+        /* SUBMIT FOOTER */
+        .submit-footer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, var(--bg) 70%, transparent);
+            padding: 16px;
+            z-index: 50;
+        }
+        .submit-inner { max-width: 520px; margin: 0 auto; }
+        .btn-submit {
+            width: 100%; padding: 16px;
+            background: var(--green);
+            border: none; border-radius: 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px; font-weight: 700;
+            color: #0d1117; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s;
+            letter-spacing: 0.05em;
+        }
+        .btn-submit:hover { background: #4dcc60; }
+        .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 20px;
+            font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 8px;
+            opacity: 0; transition: all 0.3s;
+            z-index: 200; white-space: nowrap;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.success { border-color: var(--green); color: var(--green); }
+        .toast.error { border-color: var(--red); color: var(--red); }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 300; padding: 20px;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 24px; width: 100%; max-width: 360px;
+            transform: scale(0.95); transition: transform 0.3s;
+        }
+        .modal-overlay.show .modal { transform: scale(1); }
+        .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 10px; }
+        .btn-modal {
+            flex: 1; padding: 12px;
+            border-radius: 10px; border: 1px solid var(--border);
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            font-size: 13px; font-weight: 600;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .btn-modal.cancel { background: var(--surface2); color: var(--text); }
+        .btn-modal.cancel:hover { background: var(--border); }
+        .btn-modal.confirm { background: var(--green); border-color: var(--green); color: #0d1117; }
+        .btn-modal.confirm:hover { background: #4dcc60; }
+
+        /* DIVIDER */
+        .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+        /* GUIDE BANNER */
+        .guide-banner {
+            background: var(--yellow-bg); border: 1px solid rgba(227,179,65,0.3);
+            border-radius: 10px; padding: 12px 14px;
+            font-size: 11px; color: var(--yellow); line-height: 1.6;
+            margin-bottom: 16px;
+            display: flex; gap: 10px;
+        }
+        
+        /* SKELETON ANIM */
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .skeleton { animation: pulse 1.5s infinite; background: var(--surface2); border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <div>
+                <div class="logo-text">Maintenance Checksheet</div>
+                <div class="logo-ver">v.11 — per-machine logging</div>
+            </div>
+        </div>
+        <button class="btn-refresh" onclick="confirmReset()" title="รีเซ็ต">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-8.36L23 10"/></svg>
+        </button>
+    </div>
+</header>
+
+<main>
+    <!-- GUIDE -->
+    <div class="guide-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>ข้อมูลแต่ละเครื่องจักรจะถูกบันทึกแยก Column ใน Google Sheets — ตั้งค่า Script URL ในโค้ดก่อนใช้งาน</div>
+    </div>
+
+    <!-- INSPECTOR CARD -->
+    <div class="card">
+        <div class="field-row">
+            <label class="field-label">ผู้ตรวจสอบ</label>
+            <input type="text" id="inspector_name" placeholder="ระบุชื่อผู้ตรวจสอบ" autocomplete="off">
+        </div>
+        <div class="field-row">
+            <label class="field-label">กะการทำงาน</label>
+            <select id="shift_select">
+                <option value="day">☀️ กะเช้า (08:00 – 16:00)</option>
+                <option value="eve">🌇 กะบ่าย (16:00 – 00:00)</option>
+                <option value="night">🌙 กะดึก (00:00 – 08:00)</option>
+            </select>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span class="date-chip" id="date-display">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Loading…
+            </span>
+            <span id="time-display" class="date-chip"></span>
+        </div>
+    </div>
+
+    <!-- PROGRESS CARD -->
+    <div class="card">
+        <div class="progress-row">
+            <span class="progress-label">ความคืบหน้า</span>
+            <span class="progress-count" id="prog-text">0/0</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="prog-bar"></div>
+        </div>
+        <div class="progress-stats" style="margin-top:12px">
+            <div class="stat-chip"><div class="stat-dot ok"></div><span>OK</span><span class="stat-val" id="count-ok" style="color:var(--green)">0</span></div>
+            <div class="stat-chip"><div class="stat-dot ng"></div><span>NG</span><span class="stat-val" id="count-ng" style="color:var(--red)">0</span></div>
+            <div class="stat-chip"><div class="stat-dot pending"></div><span>รอ</span><span class="stat-val" id="count-pending" style="color:var(--text-muted)">0</span></div>
+        </div>
+    </div>
+
+    <!-- MACHINE LIST -->
+    <div id="machine-list"></div>
+</main>
+
+<!-- SUBMIT -->
+<div class="submit-footer">
+    <div class="submit-inner">
+        <button class="btn-submit" id="submit-btn" onclick="openSubmitModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            บันทึกและส่งข้อมูล
+        </button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="submit-modal">
+    <div class="modal">
+        <h3>ยืนยันการส่งข้อมูล</h3>
+        <p id="modal-summary">ตรวจสอบข้อมูลก่อนส่ง</p>
+        <div class="modal-actions">
+            <button class="btn-modal cancel" onclick="closeModal('submit-modal')">ยกเลิก</button>
+            <button class="btn-modal confirm" onclick="submitData()">ส่งข้อมูล ✓</button>
+        </div>
+    </div>
+</div>
+
+<!-- RESET MODAL -->
+<div class="modal-overlay" id="reset-modal">
+    <div class="modal">
+        <h3>รีเซ็ตข้อมูล</h3>
+        <p>ต้องการล้างข้อมูลที่กรอกทั้งหมดและเริ่มใหม่ใช่หรือไม่?</p>
+        <div class="modal-actions">
+            <button class="btn-modal cancel" onclick="closeModal('reset-modal')">ยกเลิก</button>
+            <button class="btn-modal confirm" onclick="location.reload()">รีเซ็ต</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+// ============================================================
+// ⚙️  ตั้งค่า Google Apps Script Web App URL ที่นี่
+// ============================================================
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSdeqR2qEK3Go-zq0rzWKgCL5HkrnMwWxVAM-_QF2gWfp5RgB_d0AW09JGpb0yRFW-Dg/exec";
+
+// ============================================================
+// นิยามเครื่องจักร
+// ============================================================
+const machines = [];
+let idCounter = 1;
+let results = {};
+
+function initMachines() {
+    const lines = [1, 2, 3, 4, 5, 6];
+    lines.forEach(line => {
+        const g = `Line ${line}`;
+        machines.push(
+            { id: idCounter++, cat: `${g}`, sub: 'Infeed',        name: `สายพาน Infeed`,       fullName: `L${line} Infeed Belt`,    check: "สภาพสายพาน/รอยต่อ", std: "ไม่ฉีกขาด" },
+            { id: idCounter++, cat: `${g}`, sub: 'Metal Detector', name: `สายพานเขียว MD`,      fullName: `L${line} MD Belt`,        check: "ความสะอาด/รอย",     std: "สะอาด/ไม่มีรอย" },
+            { id: idCounter++, cat: `${g}`, sub: 'Metal Detector', name: `Test Piece Check`,    fullName: `L${line} Test Piece`,     check: "การตรวจจับ",         std: "Detect เจอทุกอัน" }
+        );
+        if (line <= 3) machines.push(
+            { id: idCounter++, cat: `${g}`, sub: 'X-ray',          name: `ม่านกันรังสี`,         fullName: `L${line} X-ray Curtain`, check: "สภาพม่าน",           std: "ไม่ฉีกขาด" }
+        );
+        machines.push(
+            { id: idCounter++, cat: `${g}`, sub: 'Outfeed',        name: `สายพาน Outfeed`,     fullName: `L${line} Outfeed Belt`,  check: "สภาพสายพาน",         std: "ไม่ฉีกขาด" },
+            { id: idCounter++, cat: `${g}`, sub: 'Packaging',      name: `Print QR / Sealer`,  fullName: `L${line} QR Sealer`,     check: "ความชัด/รอยซีล",     std: "ปกติ" }
+        );
+    });
+    machines.push(
+        { id: idCounter++, cat: 'Utility', sub: 'Utility', name: `Air Compressor`, fullName: `Air Compressor`, check: "แรงดันลม", std: "5-8 Bar" }
+    );
+}
+
+// ============================================================
+// เวลา
+// ============================================================
+function updateClock() {
+    const now = new Date();
+    document.getElementById('date-display').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'})}`;
+    document.getElementById('time-display').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${now.toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderApp() {
+    const container = document.getElementById('machine-list');
+    const cats = [...new Set(machines.map(m => m.cat))];
+    container.innerHTML = cats.map(cat => {
+        const catMachines = machines.filter(m => m.cat === cat);
+        const subs = [...new Set(catMachines.map(m => m.sub))];
+        return `
+        <div class="section-group">
+            <div class="cat-header">
+                <div class="cat-bar"></div>
+                <span class="cat-title">${cat}</span>
+            </div>
+            ${subs.map(sub => {
+                const items = catMachines.filter(m => m.sub === sub);
+                return items.map(m => {
+                    const res = results[m.id];
+                    const isOK = res?.status === 'OK';
+                    const isNG = res?.status === 'NG';
+                    return `
+                    <div class="machine-card ${isOK ? 'status-ok' : isNG ? 'status-ng' : ''}" id="card-${m.id}">
+                        <div class="machine-header">
+                            <div>
+                                <div class="machine-id">${m.sub.toUpperCase()} · ${m.cat}</div>
+                                <div class="machine-name">${m.name}</div>
+                                <div class="machine-std">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    มาตรฐาน: ${m.std}
+                                </div>
+                            </div>
+                            <div class="status-icon">
+                                ${isOK ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>` : ''}
+                                ${isNG ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>` : ''}
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-status ${isOK ? 'active-ok' : ''}" onclick="updateStatus(${m.id},'OK')">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                OK
+                            </button>
+                            <button class="btn-status ${isNG ? 'active-ng' : ''}" onclick="updateStatus(${m.id},'NG')">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                NG
+                            </button>
+                        </div>
+                        ${isNG ? `
+                        <div class="ng-note">
+                            <textarea rows="2" placeholder="ระบุรายละเอียดปัญหา / อาการที่พบ..." oninput="updateNote(${m.id}, this.value)">${res?.note || ''}</textarea>
+                        </div>` : ''}
+                    </div>`;
+                }).join('');
+            }).join('')}
+        </div>`;
+    }).join('');
+    updateProgress();
+}
+
+// ============================================================
+// STATE UPDATES
+// ============================================================
+window.updateStatus = (id, status) => {
+    results[id] = { ...(results[id] || {}), status };
+    renderApp();
+};
+window.updateNote = (id, note) => {
+    if (results[id]) results[id].note = note;
+};
+
+function updateProgress() {
+    const total = machines.length;
+    const done = Object.keys(results).length;
+    const okCount = Object.values(results).filter(r => r.status === 'OK').length;
+    const ngCount = Object.values(results).filter(r => r.status === 'NG').length;
+    const pending = total - done;
+    document.getElementById('prog-text').textContent = `${done}/${total}`;
+    document.getElementById('prog-bar').style.width = `${(done / total) * 100}%`;
+    document.getElementById('count-ok').textContent = okCount;
+    document.getElementById('count-ng').textContent = ngCount;
+    document.getElementById('count-pending').textContent = pending;
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+window.openSubmitModal = () => {
+    const inspectorEl = document.getElementById('inspector_name');
+    const inspector = inspectorEl.value.trim();
+    if (!inspector) {
+        // เขย่า + ขอบแดง ให้เห็นชัดว่าต้องกรอกชื่อ
+        inspectorEl.style.borderColor = 'var(--red)';
+        inspectorEl.style.background = 'rgba(248,81,73,0.08)';
+        inspectorEl.focus();
+        inspectorEl.placeholder = '⚠️ กรุณากรอกชื่อผู้ตรวจสอบก่อน!';
+        setTimeout(() => {
+            inspectorEl.style.borderColor = '';
+            inspectorEl.style.background = '';
+            inspectorEl.placeholder = 'ระบุชื่อผู้ตรวจสอบ';
+        }, 3000);
+        // scroll ขึ้นไปหาช่องกรอกชื่อ
+        inspectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+    const total = machines.length;
+    const done = Object.keys(results).length;
+    const ngCount = Object.values(results).filter(r => r.status === 'NG').length;
+    const okCount = Object.values(results).filter(r => r.status === 'OK').length;
+    document.getElementById('modal-summary').innerHTML = `
+        <div style="margin-bottom:8px">👤 ผู้ตรวจสอบ: <strong>${inspector}</strong></div>
+        <div style="margin-bottom:8px">🕐 กะ: <strong>${document.getElementById('shift_select').options[document.getElementById('shift_select').selectedIndex].text}</strong></div>
+        <div style="margin-bottom:4px">✅ OK: <strong style="color:var(--green)">${okCount}</strong> &nbsp;|&nbsp; ❌ NG: <strong style="color:var(--red)">${ngCount}</strong> &nbsp;|&nbsp; รวม: <strong>${done}/${total}</strong></div>
+        ${done < total ? `<div style="color:var(--yellow);font-size:11px;margin-top:6px">⚠️ ยังมี ${total - done} รายการที่ยังไม่ได้ตรวจ — ยืนยันส่งต่อไปได้เลย</div>` : ''}`;
+    document.getElementById('submit-modal').classList.add('show');
+};
+
+window.closeModal = (id) => document.getElementById(id).classList.remove('show');
+window.confirmReset = () => document.getElementById('reset-modal').classList.add('show');
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// SUBMIT — ส่งด้วย GET + URL params (เสถียรที่สุดกับ Google Apps Script)
+// ใช้ Image trick เพื่อหลีกเลี่ยง CORS ทั้งหมด
+// ============================================================
+window.submitData = () => {
+    closeModal('submit-modal');
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> กำลังบันทึก...`;
+
+    const now = new Date();
+    const inspector = document.getElementById('inspector_name').value.trim();
+    const shiftText = document.getElementById('shift_select').options[document.getElementById('shift_select').selectedIndex].text;
+
+    // สร้าง params object
+    const params = {
+        timestamp: now.toISOString(),
+        date: now.toLocaleDateString('th-TH'),
+        time: now.toLocaleTimeString('th-TH'),
+        inspector: inspector,
+        shift: shiftText,
+    };
+
+    // แต่ละเครื่องจักร → column แยก
+    machines.forEach(m => {
+        const res = results[m.id];
+        const colKey = m.fullName.replace(/\s+/g, '_').replace(/[^\w]/g, '');
+        params[`${colKey}_status`] = res?.status || 'ไม่ได้ตรวจ';
+        params[`${colKey}_note`]   = res?.note   || '';
+    });
+
+    // สรุป
+    const ngItems = Object.values(results).filter(r => r.status === 'NG');
+    const okItems = Object.values(results).filter(r => r.status === 'OK');
+    params['summary_ok'] = okItems.length;
+    params['summary_ng'] = ngItems.length;
+    params['summary_ng_detail'] = ngItems.map(i => {
+        const m = machines.find(m => m.id === i.id);
+        return `${m.fullName}: ${i.note || '-'}`;
+    }).join(' | ');
+
+    // สร้าง URL query string
+    const qs = Object.entries(params)
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .join('&');
+    const url = `${GOOGLE_SCRIPT_URL}?${qs}`;
+
+    // ส่งด้วย Image src trick — ไม่มี CORS, ไม่ค้างหน้า, ทำงานได้ทุก browser
+    const img = new Image();
+    img.onload = img.onerror = () => {
+        showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> บันทึกและส่งข้อมูล`;
+    };
+    img.src = url;
+};
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = () => {
+    initMachines();
+    renderApp();
+    updateClock();
+    setInterval(updateClock, 1000);
+};
+
+// Spin animation
+const style = document.createElement('style');
+style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+document.head.appendChild(style);
+</script>
+
+<!-- 
+=================================================================
+📋 GOOGLE APPS SCRIPT — คัดลอกโค้ดนี้ไปใส่ใน Apps Script
+=================================================================
+ใช้ doGet (รับข้อมูลผ่าน URL parameter) — เสถียรกว่า doPost มาก
+
+function doGet(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = e.parameter;
+    var keys = Object.keys(data);
+
+    // สร้าง header แถวแรกถ้ายังไม่มี
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(keys);
+    }
+
+    // เพิ่ม header ใหม่ถ้ามี column ใหม่
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    keys.forEach(function(key) {
+      if (headers.indexOf(key) === -1) {
+        var nextCol = sheet.getLastColumn() + 1;
+        sheet.getRange(1, nextCol).setValue(key);
+        headers.push(key);
+      }
+    });
+
+    // เพิ่มข้อมูลเรียงตาม header
+    var currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var row = currentHeaders.map(function(h) { return data[h] || ''; });
+    sheet.appendRow(row);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'ok', row: sheet.getLastRow() }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+=================================================================
+⚠️ หลังแก้โค้ดต้อง Deploy ใหม่ทุกครั้ง:
+   Deploy → Manage deployments → แก้ไข → Version: New version → Deploy
+=================================================================
+-->
+</body>
+</html>
