@@ -414,7 +414,7 @@
 // ============================================================
 // ⚙️  ตั้งค่า Google Apps Script Web App URL ที่นี่
 // ============================================================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwSdeqR2qEK3Go-zq0rzWKgCL5HkrnMwWxVAM-_QF2gWfp5RgB_d0AW09JGpb0yRFW-Dg/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymuxtb5pe0eSsIemZLAoS7g4_SM5r-2Wv7ao66k_Q9WLjdlrLpj6hZTTsK6Oljm_1Mxg/exec";
 
 // ============================================================
 // นิยามเครื่องจักร
@@ -584,8 +584,7 @@ function showToast(msg, type = 'success') {
 }
 
 // ============================================================
-// SUBMIT — ส่งด้วย GET + URL params (เสถียรที่สุดกับ Google Apps Script)
-// ใช้ Image trick เพื่อหลีกเลี่ยง CORS ทั้งหมด
+// SUBMIT — fetch POST แบบ no-cors + urlencoded (รองรับภาษาไทย/NG note)
 // ============================================================
 window.submitData = () => {
     closeModal('submit-modal');
@@ -624,20 +623,23 @@ window.submitData = () => {
         return `${m.fullName}: ${i.note || '-'}`;
     }).join(' | ');
 
-    // สร้าง URL query string
-    const qs = Object.entries(params)
-        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    // encode เป็น urlencoded string (รองรับภาษาไทยได้ถูกต้อง)
+    const body = Object.entries(params)
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
         .join('&');
-    const url = `${GOOGLE_SCRIPT_URL}?${qs}`;
 
-    // ส่งด้วย Image src trick — ไม่มี CORS, ไม่ค้างหน้า, ทำงานได้ทุก browser
-    const img = new Image();
-    img.onload = img.onerror = () => {
+    // ส่งด้วย fetch POST no-cors — ไม่ค้าง, ไม่มี CORS error
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body
+    }).finally(() => {
+        // no-cors จะไม่มี response กลับมา แต่ข้อมูลถึง Sheets แน่นอน
         showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
         btn.disabled = false;
         btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> บันทึกและส่งข้อมูล`;
-    };
-    img.src = url;
+    });
 };
 
 // ============================================================
@@ -660,32 +662,28 @@ document.head.appendChild(style);
 =================================================================
 📋 GOOGLE APPS SCRIPT — คัดลอกโค้ดนี้ไปใส่ใน Apps Script
 =================================================================
-ใช้ doGet (รับข้อมูลผ่าน URL parameter) — เสถียรกว่า doPost มาก
 
-function doGet(e) {
+function doPost(e) {
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     var data = e.parameter;
     var keys = Object.keys(data);
 
-    // สร้าง header แถวแรกถ้ายังไม่มี
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(keys);
     }
 
-    // เพิ่ม header ใหม่ถ้ามี column ใหม่
-    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var lastCol = sheet.getLastColumn();
+    var headers = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
     keys.forEach(function(key) {
       if (headers.indexOf(key) === -1) {
-        var nextCol = sheet.getLastColumn() + 1;
-        sheet.getRange(1, nextCol).setValue(key);
+        sheet.getRange(1, sheet.getLastColumn() + 1).setValue(key);
         headers.push(key);
       }
     });
 
-    // เพิ่มข้อมูลเรียงตาม header
     var currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    var row = currentHeaders.map(function(h) { return data[h] || ''; });
+    var row = currentHeaders.map(function(h) { return data[h] !== undefined ? data[h] : ''; });
     sheet.appendRow(row);
 
     return ContentService
@@ -698,9 +696,14 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
+
+function doGet(e) {
+  return ContentService.createTextOutput('Script is running OK').setMimeType(ContentService.MimeType.TEXT);
+}
+
 =================================================================
-⚠️ หลังแก้โค้ดต้อง Deploy ใหม่ทุกครั้ง:
-   Deploy → Manage deployments → แก้ไข → Version: New version → Deploy
+⚠️ หลังแก้โค้ดต้อง Deploy ใหม่:
+   Deploy → Manage deployments → ดินสอ → Version: New version → Deploy
 =================================================================
 -->
 </body>
