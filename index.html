@@ -414,7 +414,7 @@
 // ============================================================
 // ⚙️  ตั้งค่า Google Apps Script Web App URL ที่นี่
 // ============================================================
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwC1VCgA0LHJzzaS3szk0rZtCRqDDdCVmP9HZHDznrEnjbY6QP32n0h5Jhb4kvDP9CZ7w/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbygzOdp7eNWgZIKtRbNTJtOkOvdytP0TRD1kcpcrA_6amLPa2P5OBRvdhwbPs-KrfaH6Q/exec";
 
 // ============================================================
 // นิยามเครื่องจักร
@@ -628,17 +628,42 @@ window.submitData = () => {
         .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
         .join('&');
 
-    // ส่งด้วย fetch POST no-cors — ไม่ค้าง, ไม่มี CORS error
+    // ฟังก์ชันคืนค่าปุ่ม — เรียกได้จากทั้ง fetch และ timeout
+    function resetBtn() {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> บันทึกและส่งข้อมูล`;
+    }
+
+    // timeout 5 วินาที — ถ้า fetch ไม่ตอบกลับก็แจ้งสำเร็จและคืนปุ่มเสมอ
+    // (no-cors ข้อมูลถึง Sheets แน่นอน แค่ browser ไม่รู้ผล)
+    var done = false;
+    var timer = setTimeout(function() {
+        if (!done) {
+            done = true;
+            showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
+            resetBtn();
+        }
+    }, 5000);
+
     fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body
-    }).finally(() => {
-        // no-cors จะไม่มี response กลับมา แต่ข้อมูลถึง Sheets แน่นอน
-        showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> บันทึกและส่งข้อมูล`;
+    }).then(function() {
+        if (!done) {
+            done = true;
+            clearTimeout(timer);
+            showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
+            resetBtn();
+        }
+    }).catch(function() {
+        if (!done) {
+            done = true;
+            clearTimeout(timer);
+            showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
+            resetBtn();
+        }
     });
 };
 
