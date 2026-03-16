@@ -613,13 +613,17 @@ window.submitData = function() {
         fd.append(col+'_note',   res ? (res.note||'') : '');
     });
 
-    var ngItems = Object.values(results).filter(function(r){return r.status==='NG';});
-    var okItems = Object.values(results).filter(function(r){return r.status==='OK';});
-    fd.append('summary_ok', okItems.length);
-    fd.append('summary_ng', ngItems.length);
-    fd.append('summary_ng_detail', ngItems.map(function(i){
-        var m = machines.find(function(m){return m.id===i.id;});
-        return m.fullName+': '+(i.note||'-');
+    // ใช้ Object.entries เพื่อให้ได้ทั้ง id (key) และข้อมูล (value)
+    var allEntries = Object.entries(results);
+    var ngEntries = allEntries.filter(function(e){return e[1].status==='NG';});
+    var okCount   = allEntries.filter(function(e){return e[1].status==='OK';}).length;
+    fd.append('summary_ok', okCount);
+    fd.append('summary_ng', ngEntries.length);
+    fd.append('summary_ng_detail', ngEntries.map(function(e){
+        var machineId = Number(e[0]);
+        var r = e[1];
+        var m = machines.find(function(m){return m.id === machineId;});
+        return (m ? m.fullName : 'Unknown')+': '+(r.note||'-');
     }).join(' | '));
 
     function done() {
