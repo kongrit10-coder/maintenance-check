@@ -584,93 +584,58 @@ function showToast(msg, type = 'success') {
 }
 
 // ============================================================
-// SUBMIT — fetch POST แบบ no-cors + urlencoded (รองรับภาษาไทย/NG note)
 // ============================================================
-window.submitData = () => {
+// SUBMIT — FormData + no-cors (ไม่ set Content-Type เอง)
+// รองรับภาษาไทย, ใช้ได้บนมือถือทุกรุ่น
+// ============================================================
+window.submitData = function() {
     closeModal('submit-modal');
-    const btn = document.getElementById('submit-btn');
+    var btn = document.getElementById('submit-btn');
     btn.disabled = true;
-    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg> กำลังบันทึก...`;
+    btn.textContent = 'กำลังบันทึก...';
 
-    const now = new Date();
-    const inspector = document.getElementById('inspector_name').value.trim();
-    const shiftText = document.getElementById('shift_select').options[document.getElementById('shift_select').selectedIndex].text;
+    var now = new Date();
+    var inspector = document.getElementById('inspector_name').value.trim();
+    var shiftEl = document.getElementById('shift_select');
+    var shiftText = shiftEl.options[shiftEl.selectedIndex].text;
 
-    // สร้าง params object
-    const params = {
-        timestamp: now.toISOString(),
-        date: now.toLocaleDateString('th-TH'),
-        time: now.toLocaleTimeString('th-TH'),
-        inspector: inspector,
-        shift: shiftText,
-    };
+    var fd = new FormData();
+    fd.append('timestamp', now.toISOString());
+    fd.append('date', now.toLocaleDateString('th-TH'));
+    fd.append('time', now.toLocaleTimeString('th-TH'));
+    fd.append('inspector', inspector);
+    fd.append('shift', shiftText);
 
-    // แต่ละเครื่องจักร → column แยก
-    machines.forEach(m => {
-        const res = results[m.id];
-        const colKey = m.fullName.replace(/\s+/g, '_').replace(/[^\w]/g, '');
-        params[`${colKey}_status`] = res?.status || 'ไม่ได้ตรวจ';
-        params[`${colKey}_note`]   = res?.note   || '';
+    machines.forEach(function(m) {
+        var res = results[m.id];
+        var col = m.fullName.replace(/\s+/g,'_').replace(/[^\w]/g,'');
+        fd.append(col+'_status', res ? res.status : 'ไม่ได้ตรวจ');
+        fd.append(col+'_note',   res ? (res.note||'') : '');
     });
 
-    // สรุป
-    const ngItems = Object.values(results).filter(r => r.status === 'NG');
-    const okItems = Object.values(results).filter(r => r.status === 'OK');
-    params['summary_ok'] = okItems.length;
-    params['summary_ng'] = ngItems.length;
-    params['summary_ng_detail'] = ngItems.map(i => {
-        const m = machines.find(m => m.id === i.id);
-        return `${m.fullName}: ${i.note || '-'}`;
-    }).join(' | ');
+    var ngItems = Object.values(results).filter(function(r){return r.status==='NG';});
+    var okItems = Object.values(results).filter(function(r){return r.status==='OK';});
+    fd.append('summary_ok', okItems.length);
+    fd.append('summary_ng', ngItems.length);
+    fd.append('summary_ng_detail', ngItems.map(function(i){
+        var m = machines.find(function(m){return m.id===i.id;});
+        return m.fullName+': '+(i.note||'-');
+    }).join(' | '));
 
-    // encode เป็น urlencoded string (รองรับภาษาไทยได้ถูกต้อง)
-    const body = Object.entries(params)
-        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-        .join('&');
-
-    // ฟังก์ชันคืนค่าปุ่ม — เรียกได้จากทั้ง fetch และ timeout
-    function resetBtn() {
+    function done() {
+        showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
         btn.disabled = false;
-        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> บันทึกและส่งข้อมูล`;
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> บันทึกและส่งข้อมูล';
     }
 
-    // timeout 5 วินาที — ถ้า fetch ไม่ตอบกลับก็แจ้งสำเร็จและคืนปุ่มเสมอ
-    // (no-cors ข้อมูลถึง Sheets แน่นอน แค่ browser ไม่รู้ผล)
-    var done = false;
-    var timer = setTimeout(function() {
-        if (!done) {
-            done = true;
-            showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
-            resetBtn();
-        }
-    }, 5000);
+    var called = false;
+    // timeout 3 วิ — no-cors ส่งข้อมูลไปแล้ว browser แค่ไม่รู้ผลลัพธ์
+    var t = setTimeout(function(){ if(!called){called=true;done();} }, 3000);
 
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body
-    }).then(function() {
-        if (!done) {
-            done = true;
-            clearTimeout(timer);
-            showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
-            resetBtn();
-        }
-    }).catch(function() {
-        if (!done) {
-            done = true;
-            clearTimeout(timer);
-            showToast('✅ บันทึกข้อมูลเรียบร้อย!', 'success');
-            resetBtn();
-        }
-    });
+    fetch(GOOGLE_SCRIPT_URL, {method:'POST', mode:'no-cors', body:fd})
+        .then(function(){ if(!called){called=true;clearTimeout(t);done();} })
+        .catch(function(){ if(!called){called=true;clearTimeout(t);done();} });
 };
-
-// ============================================================
-// INIT
-// ============================================================
-window.onload = () => {
     initMachines();
     renderApp();
     updateClock();
