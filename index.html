@@ -636,6 +636,7 @@ window.submitData = function() {
         .then(function(){ if(!called){called=true;clearTimeout(t);done();} })
         .catch(function(){ if(!called){called=true;clearTimeout(t);done();} });
 };
+window.onload = function() {
     initMachines();
     renderApp();
     updateClock();
